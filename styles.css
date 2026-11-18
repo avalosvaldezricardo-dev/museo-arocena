@@ -1,0 +1,92 @@
+/* Estilos personalizados para Rutas y Experiencias Museo Arocena */
+
+:root {
+  --arocena-gold: #C5A059;
+  --arocena-burgundy: #6B1D2F;
+  --arocena-dark: #141416;
+}
+
+/* Suavizado de desplazamiento */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sombras refinadas para las tarjetas de experiencias */
+.package-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.package-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Tarjetas de aliados activas */
+.aliado-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.aliado-card.active {
+  border-color: var(--arocena-burgundy) !important;
+  background-color: rgba(107, 29, 47, 0.05) !important;
+  box-shadow: 0 4px 12px rgba(107, 29, 47, 0.08);
+}
+
+/* Personalización de los Popups de Leaflet */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  padding: 4px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* Efecto sutil para el Hero */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.02); }
+}
+
+.hero-glow {
+  background: radial-gradient(circle at 50% 50%, rgba(197, 160, 89, 0.15) 0%, transparent 70%);
+}
+
+/* Botones de filtro */
+.filter-btn {
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+  background-color: var(--arocena-burgundy) !important;
+  color: #ffffff !important;
+  border-color: var(--arocena-burgundy) !important;
+}
+
+/* Acordeón FAQ animación */
+.faq-content {
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Ajustes de impresión para el Pase Digital */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #booking-modal, #booking-modal * {
+    visibility: visible;
+  }
+  #booking-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: transparent;
+  }
+}
