@@ -1,5 +1,19 @@
 // Lógica interactiva para la Landing Page de Rutas y Experiencias Museo Arocena
 
+// Configuración de Supabase (Proyecto Activo: camaro-configurator / Museo Arocena)
+const SUPABASE_URL = "https://sfhuikqawnylucondznd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmaHVpa3Fhd255bHVjb25kem5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMjMzNzgsImV4cCI6MjExMDU5OTM3OH0.N4gmrTRGP5I05I9lwMlABaikgFhzj7AzQ2yGoMUPEuQ";
+let supabaseClient = null;
+
+if (window.supabase && window.supabase.createClient) {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log("Supabase inicializado correctamente.");
+  } catch (err) {
+    console.warn("No se pudo inicializar Supabase:", err);
+  }
+}
+
 // Estado global de la reserva en curso
 let currentBooking = {
   packageTitle: 'Arte & Gastronomía',
@@ -271,6 +285,49 @@ function processBooking(event) {
   if (window.lucide) {
     lucide.createIcons();
   }
+
+  // Guardar en Supabase en segundo plano si está disponible
+  if (supabaseClient) {
+    const isFamilyPackage = currentBooking.packageTitle.includes("Familiar");
+    const totalAmount = isFamilyPackage ? currentBooking.unitPrice : currentBooking.unitPrice * currentBooking.persons;
+
+    supabaseClient
+      .from('arocena_bookings')
+      .insert([
+        {
+          booking_code: bookingCode,
+          package_slug: currentBooking.packageTitle.toLowerCase().includes('gastronom') ? 'arte-y-gastronomia' :
+                        currentBooking.packageTitle.toLowerCase().includes('talento') ? 'talento-lagunero' :
+                        currentBooking.packageTitle.toLowerCase().includes('altura') ? 'torreon-de-altura' : 'exploradores-del-desierto',
+          visitor_name: nameInput.value,
+          visitor_email: emailInput.value,
+          visitor_phone: document.getElementById("book-phone").value,
+          visit_date: dateInput.value,
+          visit_time: timeSelect.value,
+          persons: currentBooking.persons,
+          unit_price: currentBooking.unitPrice,
+          total_amount: totalAmount,
+          payment_status: 'completed'
+        }
+      ])
+      .select()
+      .then(res => {
+        if (res.data && res.data[0]) {
+          const expires = new Date();
+          expires.setDate(expires.getDate() + 7);
+          supabaseClient.from('arocena_passes').insert([
+            {
+              booking_id: res.data[0].id,
+              pass_code: bookingCode,
+              qr_payload: qrData,
+              status: 'VALID',
+              expires_at: expires.toISOString()
+            }
+          ]).then(() => console.log('Pase guardado en Supabase'));
+        }
+      })
+      .catch(err => console.error('Error al guardar reserva en Supabase:', err));
+  }
 }
 
 // Acordeón FAQ
@@ -300,6 +357,30 @@ function handleB2BSubmit(event) {
   event.preventDefault();
   const form = document.getElementById("form-b2b");
   const successMsg = document.getElementById("b2b-success");
+
+  const businessName = form.querySelector('input[placeholder*="Café La Estación"]').value;
+  const businessCategory = form.querySelector('select').value;
+  const phone = form.querySelector('input[type="tel"]').value;
+  const socialMedia = form.querySelector('input[placeholder*="instagram.com"]').value;
+  const proposal = form.querySelector('textarea').value;
+
+  // Persistir en Supabase
+  if (supabaseClient) {
+    supabaseClient
+      .from('arocena_ally_applications')
+      .insert([
+        {
+          business_name: businessName,
+          business_category: businessCategory,
+          phone: phone,
+          social_media: socialMedia,
+          proposal: proposal,
+          status: 'pending_review'
+        }
+      ])
+      .then(res => console.log('Postulación aliada registrada en Supabase:', res))
+      .catch(err => console.error('Error al registrar postulación en Supabase:', err));
+  }
 
   form.reset();
   form.classList.add("hidden");
